@@ -37,6 +37,9 @@ class _WebhookPaymentScreenState extends State<WebhookPaymentScreen> {
         ),
         SizedBox(height: 20),
         CardField(
+          enablePostalCode: true,
+          countryCode: 'US',
+          postalCodeHintText: 'Enter the us postal code',
           onCardChanged: (card) {
             setState(() {
               _card = card;
@@ -116,11 +119,9 @@ class _WebhookPaymentScreenState extends State<WebhookPaymentScreen> {
         'Content-Type': 'application/json',
       },
       body: json.encode({
-        'email': _email,
         'currency': 'usd',
-        'items': [
-          {'id': 'id'}
-        ],
+        'amount': 1099,
+        'payment_method_types': ['card'],
         'request_three_d_secure': 'any',
       }),
     );

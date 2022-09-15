@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:stripe_platform_interface/src/models/ach_params.dart';
 import 'package:stripe_platform_interface/src/models/create_token_data.dart';
+import 'package:stripe_platform_interface/src/models/financial_connections.dart';
 import 'package:stripe_platform_interface/src/models/google_pay.dart';
+import 'package:stripe_platform_interface/src/models/wallet.dart';
 import 'package:stripe_platform_interface/src/result_parser.dart';
 
 import 'models/app_info.dart';
@@ -82,13 +84,13 @@ class MethodChannelStripe extends StripePlatform {
   @override
   Future<PaymentIntent> confirmPayment(
     String paymentIntentClientSecret,
-    PaymentMethodParams params, [
+    PaymentMethodParams? params, [
     Map<String, String> options = const {},
   ]) async {
     final result = await _methodChannel
         .invokeMapMethod<String, dynamic>('confirmPayment', {
       'paymentIntentClientSecret': paymentIntentClientSecret,
-      'params': params.toJson(),
+      'params': params?.toJson(),
       'options': options,
     });
 
@@ -232,6 +234,7 @@ class MethodChannelStripe extends StripePlatform {
     final invokeParams = params.map(
       (value) => value.toJson(),
       card: (data) => data.toJson()['params'],
+      pii: (data) => data.toJson()['params'],
       bankAccount: (data) => data.toJson()['params'],
     );
 
@@ -359,6 +362,55 @@ class MethodChannelStripe extends StripePlatform {
     return ResultParser<PaymentIntent>(
             parseJson: (json) => PaymentIntent.fromJson(json))
         .parse(result: result!, successResultKey: 'paymentIntent');
+  }
+
+  @override
+  Future<AddToWalletResult> canAddToWallet(String last4) async {
+    final result = await _methodChannel.invokeMapMethod<String, dynamic>(
+      'canAddCardToWallet',
+      {
+        'params': {
+          'cardLastFour': last4,
+        }
+      },
+    );
+
+    return AddToWalletResult(
+      canAddToWallet: result?['canAddCard'] as bool,
+      details: AddToWalletDetails.fromJson(
+        result?['details'],
+      ),
+    );
+  }
+
+  @override
+  Future<FinancialConnectionTokenResult> collectBankAccountToken(
+      {required String clientSecret}) async {
+    final result = await _methodChannel
+        .invokeMapMethod<String, dynamic>('collectBankAccountToken', {
+      'clientSecret': clientSecret,
+    });
+
+    if (result!.containsKey('error')) {
+      throw ResultParser<void>(parseJson: (json) => {}).parseError(result);
+    }
+
+    return FinancialConnectionTokenResult.fromJson(result);
+  }
+
+  @override
+  Future<FinancialConnectionSessionResult> collectFinancialConnectionsAccounts(
+      {required String clientSecret}) async {
+    final result = await _methodChannel.invokeMapMethod<String, dynamic>(
+        'collectFinancialConnectionsAccounts', {
+      'clientSecret': clientSecret,
+    });
+
+    if (result!.containsKey('error')) {
+      throw ResultParser<void>(parseJson: (json) => {}).parseError(result);
+    }
+
+    return FinancialConnectionSessionResult.fromJson(result);
   }
 }
 

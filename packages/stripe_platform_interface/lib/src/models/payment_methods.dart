@@ -406,6 +406,16 @@ class PaymentMethodParams with _$PaymentMethodParams {
   }) = _PaymentMethodParamsEps;
 
   @JsonSerializable(explicitToJson: true)
+  @FreezedUnionValue('Affirm')
+
+  /// Config parameters for affirm payment method.
+  /// Shipping details are required most of the time.
+  const factory PaymentMethodParams.affirm({
+    /// Paymentmethod data for this paymentmethod.
+    required PaymentMethodData paymentMethodData,
+  }) = _PaymentMethodParamsAffirm;
+
+  @JsonSerializable(explicitToJson: true)
   @FreezedUnionValue('GrabPay')
 
   /// Config parameters for GrabPay payment method.

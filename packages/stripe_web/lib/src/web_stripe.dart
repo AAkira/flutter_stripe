@@ -87,10 +87,11 @@ class WebStripe extends StripePlatform {
   @override
   Future<PaymentIntent> confirmPayment(
     String paymentIntentClientSecret,
-    PaymentMethodParams params, [
+    PaymentMethodParams? params, [
     Map<String, String> options = const {},
   ]) async {
-    final response = await params.maybeWhen<Future<s.PaymentIntentResponse>>(
+    assert(params != null, 'params are not allowed to be null on the web');
+    final response = await params!.maybeWhen<Future<s.PaymentIntentResponse>>(
       card: (usage, options) {
         return js.confirmCardPayment(
           paymentIntentClientSecret,
@@ -339,6 +340,23 @@ class WebStripe extends StripePlatform {
     List<ApplePayErrorAddressField>? errorAddressFields,
   }) {
     throw WebUnsupportedError.method('updateApplePaySummaryItems');
+  }
+
+  @override
+  Future<AddToWalletResult> canAddToWallet(String last4) {
+    throw WebUnsupportedError.method('canAddToWallet');
+  }
+
+  @override
+  Future<FinancialConnectionTokenResult> collectBankAccountToken(
+      {required String clientSecret}) {
+    throw WebUnsupportedError.method('collectBankAccountToken');
+  }
+
+  @override
+  Future<FinancialConnectionSessionResult> collectFinancialConnectionsAccounts(
+      {required String clientSecret}) {
+    throw WebUnsupportedError.method('collectFinancialConnectionsAccounts');
   }
 }
 

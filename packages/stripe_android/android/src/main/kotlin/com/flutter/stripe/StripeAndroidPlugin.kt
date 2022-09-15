@@ -169,6 +169,18 @@ If you continue to have trouble, follow this discussion to get some support http
                 params = call.requiredArgument("params"),
                 promise = Promise(result)
             )
+            "canAddCardToWallet" -> stripeSdk.canAddCardToWallet(
+                params = call.requiredArgument("params"),
+                promise = Promise(result)
+            )
+            "collectBankAccountToken" -> stripeSdk.collectBankAccountToken(
+                clientSecret = call.requiredArgument("clientSecret"),
+                promise = Promise(result)
+            )
+            "collectFinancialConnectionsAccounts" -> stripeSdk.collectFinancialConnectionsAccounts(
+                clientSecret = call.requiredArgument("clientSecret"),
+                promise = Promise(result)
+            )
             else -> result.notImplemented()
         }
     }
