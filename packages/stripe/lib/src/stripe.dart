@@ -26,8 +26,9 @@ class Stripe {
 
   /// Retrieves the publishable API key.
   static String get publishableKey {
-    assert(instance._publishableKey != null,
-        'A publishableKey is required and missing');
+    if (instance._publishableKey == null) {
+      throw const StripeConfigException('Publishable key is not set');
+    }
     return instance._publishableKey!;
   }
 
@@ -148,20 +149,21 @@ class Stripe {
     }
   }
 
-  ///Converts payment information defined in [data] into a [PaymentMethod]
+  ///Converts payment information defined in [params] into a [PaymentMethod]
   ///object that can be passed to your server.
   ///
-  /// [data] specificies the parameters associated with the specific
+  /// [params] specificies the parameters associated with the specific
   /// paymentmethod. See [PaymentMethodParams] for more details.
   ///
   /// Throws an [StripeException] in case creating the payment method fails.
-  Future<PaymentMethod> createPaymentMethod(
-    PaymentMethodParams data, [
-    Map<String, String> options = const {},
-  ]) async {
+  Future<PaymentMethod> createPaymentMethod({
+    required PaymentMethodParams params,
+    PaymentMethodOptions? options,
+  }) async {
     await _awaitForSettings();
     try {
-      final paymentMethod = await _platform.createPaymentMethod(data, options);
+      final paymentMethod =
+          await _platform.createPaymentMethod(params, options);
       return paymentMethod;
     } on StripeError catch (error) {
       throw StripeError(message: error.message, code: error.message);
@@ -240,6 +242,15 @@ class Stripe {
     }
   }
 
+  /// Handle URL callback from iDeal payment returnUrl to close iOS in-app webview
+  Future<bool> handleURLCallback(String url) async {
+    try {
+      return await _platform.handleURLCallback(url);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Confirms a payment method, using the provided [paymentIntentClientSecret]
   /// and [data].
   ///
@@ -247,15 +258,18 @@ class Stripe {
   /// [PaymentIntent]. Throws a [StripeException] when confirming the
   /// paymentmethod fails.
 
-  Future<PaymentIntent> confirmPayment(
-    String paymentIntentClientSecret,
-    PaymentMethodParams? data, [
-    Map<String, String> options = const {},
-  ]) async {
+  Future<PaymentIntent> confirmPayment({
+    required String paymentIntentClientSecret,
+    PaymentMethodParams? data,
+    PaymentMethodOptions? options,
+  }) async {
     await _awaitForSettings();
     try {
       final paymentMethod = await _platform.confirmPayment(
-          paymentIntentClientSecret, data, options);
+        paymentIntentClientSecret,
+        data,
+        options,
+      );
       return paymentMethod;
     } on StripeError {
       rethrow;
@@ -287,11 +301,11 @@ class Stripe {
   /// Use this method when the customer submits the form for SetupIntent.
   ///
   /// Throws a [StripeException] when confirming the setupintent fails.
-  Future<SetupIntent> confirmSetupIntent(
-    String paymentIntentClientSecret,
-    PaymentMethodParams params, [
-    Map<String, String> options = const {},
-  ]) async {
+  Future<SetupIntent> confirmSetupIntent({
+    required String paymentIntentClientSecret,
+    required PaymentMethodParams params,
+    PaymentMethodOptions? options,
+  }) async {
     await _awaitForSettings();
     try {
       final setupIntent = await _platform.confirmSetupIntent(
@@ -329,7 +343,10 @@ class Stripe {
   Future<void> initPaymentSheet({
     required SetupPaymentSheetParameters paymentSheetParameters,
   }) async {
-    assert(!(paymentSheetParameters.applePay !=null && instance._merchantIdentifier == null), 'merchantIdentifier must be specified if you are using Apple Pay. Please refer to this article to get a merchant identifier: https://support.stripe.com/questions/enable-apple-pay-on-your-stripe-account');
+    assert(
+        !(paymentSheetParameters.applePay != null &&
+            instance._merchantIdentifier == null),
+        'merchantIdentifier must be specified if you are using Apple Pay. Please refer to this article to get a merchant identifier: https://support.stripe.com/questions/enable-apple-pay-on-your-stripe-account');
     await _awaitForSettings();
     await _platform.initPaymentSheet(paymentSheetParameters);
   }
