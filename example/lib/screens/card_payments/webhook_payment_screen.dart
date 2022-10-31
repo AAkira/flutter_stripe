@@ -37,6 +37,9 @@ class _WebhookPaymentScreenState extends State<WebhookPaymentScreen> {
         ),
         SizedBox(height: 20),
         CardField(
+          enablePostalCode: true,
+          countryCode: 'US',
+          postalCodeHintText: 'Enter the us postal code',
           onCardChanged: (card) {
             setState(() {
               _card = card;
@@ -92,15 +95,15 @@ class _WebhookPaymentScreenState extends State<WebhookPaymentScreen> {
     // The rest will be done automatically using webhooks
     // ignore: unused_local_variable
     final paymentIntent = await Stripe.instance.confirmPayment(
-      clientSecret['clientSecret'],
-      PaymentMethodParams.card(
+      paymentIntentClientSecret: clientSecret['clientSecret'],
+      data: PaymentMethodParams.card(
         paymentMethodData: PaymentMethodData(
           billingDetails: billingDetails,
         ),
-        options: PaymentMethodOptions(
-          setupFutureUsage:
-              _saveCard == true ? PaymentIntentsFutureUsage.OffSession : null,
-        ),
+      ),
+      options: PaymentMethodOptions(
+        setupFutureUsage:
+            _saveCard == true ? PaymentIntentsFutureUsage.OffSession : null,
       ),
     );
 
@@ -116,11 +119,9 @@ class _WebhookPaymentScreenState extends State<WebhookPaymentScreen> {
         'Content-Type': 'application/json',
       },
       body: json.encode({
-        'email': _email,
         'currency': 'usd',
-        'items': [
-          {'id': 'id'}
-        ],
+        'amount': 1099,
+        'payment_method_types': ['card'],
         'request_three_d_secure': 'any',
       }),
     );

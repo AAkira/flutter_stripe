@@ -36,13 +36,18 @@ abstract class StripePlatform extends PlatformInterface {
 
   Future<PaymentMethod> createPaymentMethod(
     PaymentMethodParams data, [
-    Map<String, String> options = const {},
+    PaymentMethodOptions? options,
   ]);
 
-  Future<PaymentIntent> handleNextAction(String paymentIntentClientSecret);
+  Future<PaymentIntent> handleNextAction(String paymentIntentClientSecret,
+      {String? returnURL});
   Future<PaymentIntent> confirmPayment(
-      String paymentIntentClientSecret, PaymentMethodParams params,
-      [Map<String, String> options = const {}]);
+    String paymentIntentClientSecret,
+    PaymentMethodParams? params,
+
+    /// Paymentmethod options
+    PaymentMethodOptions? options,
+  );
   Future<bool> isApplePaySupported() async => false;
 
   /// Configure the payment sheet using [SetupPaymentSheetParameters] as config.
@@ -63,19 +68,25 @@ abstract class StripePlatform extends PlatformInterface {
     List<ApplePayErrorAddressField>? errorAddressFields,
   });
 
+  Future<bool> handleURLCallback(String url);
+
   Future<void> initGooglePay(GooglePayInitParams params);
   Future<void> presentGooglePay(PresentGooglePayParams params);
   Future<bool> googlePayIsSupported(IsGooglePaySupportedParams params);
   Future<PaymentMethod> createGooglePayPaymentMethod(
       CreateGooglePayPaymentParams params);
 
+  Future<AddToWalletResult> canAddToWallet(String last4);
+
   /// Creates a token for card details.
   ///
   /// Note this method is legacy and it is advised to use [PaymentIntent].
   Future<TokenData> createToken(CreateTokenParams params);
   Future<SetupIntent> confirmSetupIntent(
-      String setupIntentClientSecret, PaymentMethodParams data,
-      [Map<String, String> options = const {}]);
+    String setupIntentClientSecret,
+    PaymentMethodParams data,
+    PaymentMethodOptions? options,
+  );
   Future<PaymentIntent> retrievePaymentIntent(String clientSecret);
   Future<String> createTokenForCVCUpdate(String cvc);
 
@@ -91,6 +102,13 @@ abstract class StripePlatform extends PlatformInterface {
     required String clientSecret,
     required VerifyMicroDepositsParams params,
   });
+
+  /// Methods related to financial connections
+  Future<FinancialConnectionTokenResult> collectBankAccountToken(
+      {required String clientSecret});
+
+  Future<FinancialConnectionSessionResult> collectFinancialConnectionsAccounts(
+      {required String clientSecret});
 
   /// Updates the internal card details. This method will not validate the card
   /// information so you should validate the information yourself.
